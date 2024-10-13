@@ -2,6 +2,24 @@
 
 A RESTful API server for sending HTTP requests to a MIDI device
 
+## Setup 
+
+1. Clone The Repo
+>  git clone git@github.com:mastergray/midi-cast-py.git && cd midi-cast-py
+
+2. Setup a virtual enviroment
+
+> /usr/bin/python3.11 -m venv venv
+
+3. Start the virtual enviroment
+
+> source venv/bin/activate
+
+4. Install dependencies
+
+> pip install -r requirements.txt
+
+
 ## API Routes
 
 | Method | Route        | Params                                                    | Description                      | Response | 
