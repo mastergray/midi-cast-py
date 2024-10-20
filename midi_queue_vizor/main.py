@@ -118,7 +118,8 @@ class MIDIQueueVizor:
             self.outport.panic()
         # Manually clear every queues messages and active notes:
         for queue in self.queues:
-            queue.queue = asyncio.Queue()    # Initialize new queue to remove existing messages
+            # TODO: We can't just re-iniitalize the async quee to remove exisitng messages WITHOUT re-adding it to the event loop:
+            #queue.queue = asyncio.Queue()    # Initialize new queue to remove existing messages
             queue.activeNotes = {}           # Initialize new active notes cache to remove all existing notes
         # Re-active vizor and queues:
         self.active = True

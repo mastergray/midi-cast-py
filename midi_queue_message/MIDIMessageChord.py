@@ -38,7 +38,7 @@ class MIDIMessageChord (MIDIQueueMessage):
     # CONSTRUCTOR #
     ###############
 
-    def __init__(self, channel : int , tonic : Union[int,str], degrees : List[str], scale : Union[List[int], None] = None, transpose : str = None, gate : Union[int, float, None] = None, velocity: int = 127):
+    def __init__(self, channel : int , tonic : Union[int,str], degrees : List[str], scale : Union[List[int], None] = None, transpose : str = None, gate : Union[int, float, None] = None, velocity: Union[int, None] = None):
         super().__init__(channel=channel)
         self.tonic = tonic          # "Tonic" of scale chord is built from
         self.scale = scale          # Defines distance of notes from tonic to build chord from 
@@ -64,7 +64,7 @@ class MIDIMessageChord (MIDIQueueMessage):
             self._tonic = MIDINoteMessage.lookup(value)
         elif isinstance(value, int):
             if value >= 21 and value <= 108:
-                self._note = value 
+                self._tonic = value 
             else:
                 raise ValueError(f"MIDI Note Value '{value}' Not In Range: 21 >= INT <= 108") 
         else:
@@ -105,6 +105,24 @@ class MIDIMessageChord (MIDIQueueMessage):
         """SETTER for root of chord"""
         self._root = MIDIMessageChord.degree(value, self.scale, self.tonic) if value is not None else self.tonic 
 
+    @property
+    def velocity(self) -> int:
+        """GETTER for how "loud" message should be processed for"""
+        return self._velocity 
+    
+    @velocity.setter
+    def velocity(self, value:Union[None, int] = None) -> None:
+        """SETTER for how "loud" message should be processed for"""
+        if isinstance(value, int):
+            if value >= 0 and value <= 127:
+                self._velocity = value 
+            else:
+                raise ValueError(f"MIDI Velocity Value '{value}' Not In Range: 0 >= INT <= 127") 
+        elif value is None:
+            self._velocity = 127
+        else:
+            raise TypeError("Can Only Set MIDI Velocity Value Using Either NONE or an INTEGER")
+
     #################
     # Magic Methods #
     #################
@@ -118,11 +136,11 @@ class MIDIMessageChord (MIDIQueueMessage):
         chord["_noteValue"] = self._tones 
         chord["_noteName"] =  ", ".join([MIDINoteMessage.reverseLookup(tone) for tone in self._tones])
         chord["_gate"] = self.gate 
-        chord["_velocity"] = self.velocity
+        #chord["_velocity"] = self.velocity
         # Properties to remove:
         del chord["_tones"]
         del chord["gate"]
-        del chord["velocity"]
+        #del chord["velocity"]
         del chord["_scale"]
         # Transform dictionary into string:
         return json.dumps(chord)
@@ -131,14 +149,13 @@ class MIDIMessageChord (MIDIQueueMessage):
     async def __call__(self, queue : "MIDIQueue" = None) -> None:
         """How this message is processed by the given queue"""
         try:
-
             """Implements how to process a NOTE_ON MIDI message with optional gate delay"""
             # NOTE: If no queue is set, we print the message when called
             # Initialize and send message if queue is set:
             if queue is not None and queue.active is True:
                 for tone in self.tones:
                     queue.addActiveNote(tone)
-                    message = mido.Message("note_on", channel=self.channel, note=tone, velocity=self.velocity)
+                    message = mido.Message("note_on", channel=self.channel, note=int(tone), velocity=self.velocity)
                     queue.vizor.send(message)
             else:
                 print(self)

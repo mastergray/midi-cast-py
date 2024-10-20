@@ -20,6 +20,7 @@ from midi_queue_message.MIDINoteMessageOff import MIDINoteMessageOff    # For se
 from midi_queue_message.MIDIMessageChord import MIDIMessageChord        # For sending the MIDI Messages of a chord
 from midi_queue_message.MIDIMessageStop import MIDIMessageStop          # For stopping all the active notes of a specific channel
 from midi_queue_message.MIDIMessageControl import MIDIMessageControl    # For sending CONTROL_CHANGE MIDI messages
+from flask_cors import CORS                                             # For setting CORS
 
 class MIDICastServer:
 
@@ -32,6 +33,11 @@ class MIDICastServer:
     def __init__(self, outport : mido.ports.BaseOutput):
         self.vizor =  MIDIQueueVizor.initChannels(outport) # Initializes process for managing messages to a MIDI device
         self.app = Flask(__name__)                         # Create an instance of the Flask app as a property of the class
+        
+        # TODO: Dont accept CORS from EVERYONE:
+        CORS(self.app)
+        
+        
         self.initRoutes()                                  # Initalizes routes for Flask server 
 
     ####################
@@ -73,7 +79,7 @@ class MIDICastServer:
             except Exception as e:
                 
                 print(e)
-                return str(e), 500
+                return jsonify({"error":str(e)}), 500
             
         # POST :: /on/:channel
         @self.app.route("/off/<channel>", methods=["POST"])
@@ -102,7 +108,7 @@ class MIDICastServer:
             except Exception as e:
                 
                 print(e)
-                return str(e), 500
+                return jsonify({"error":str(e)}), 500
 
         # POST :: /chord/:channel
         @self.app.route("/chord/<channel>", methods=["POST"])
@@ -134,7 +140,7 @@ class MIDICastServer:
             except Exception as e:
                 
                 print(e)
-                return str(e), 500
+                return jsonify({"error":str(e)}), 500
             
         # POST :: /cc/:channel
         @self.app.route("/cc/<channel>", methods=["POST"])
@@ -163,7 +169,7 @@ class MIDICastServer:
             except Exception as e:
                 
                 print(e)
-                return str(e), 500
+                return jsonify({"error":str(e)}), 500
             
         # POST :: /cc/:channel/on
         @self.app.route("/cc/<channel>/on", methods=["POST"])
@@ -191,7 +197,7 @@ class MIDICastServer:
             except Exception as e:
                 
                 print(e)
-                return str(e), 500
+                return jsonify({"error":str(e)}), 500
             
         # POST :: /cc/:channel/off
         @self.app.route("/cc/<channel>/off", methods=["POST"])
@@ -219,7 +225,7 @@ class MIDICastServer:
             except Exception as e:
                 
                 print(e)
-                return str(e), 500
+                return jsonify({"error":str(e)}), 500
             
         # POST :: /cc/:channel/sweep
         @self.app.route("/cc/<channel>/sweep", methods=["POST"])
@@ -257,7 +263,7 @@ class MIDICastServer:
             except Exception as e:
                 
                 print(e)
-                return str(e), 500
+                return jsonify({"error":str(e)}), 500
             
         # POST :: /cc/:channel/sweep/:easing
         @self.app.route("/cc/<channel>/sweep/<easing>", methods=["POST"])
@@ -296,7 +302,7 @@ class MIDICastServer:
             except Exception as e:
                 
                 print(e)
-                return str(e), 500
+                return jsonify({"error":str(e)}), 500
 
         # POST :: /stop/:channel
         @self.app.route("/stop/<channel>", methods=["POST"])
@@ -323,7 +329,7 @@ class MIDICastServer:
             except Exception as e:
                 
                 print(e)
-                return str(e), 500
+                return jsonify({"error":str(e)}), 500
             
         # GET :: /clear/:channel
         @self.app.route("/clear/<channel>", methods=["GET"])
@@ -343,7 +349,7 @@ class MIDICastServer:
             except Exception as e:
 
                 print(e)
-                return str(e), 500
+                return jsonify({"error":str(e)}), 500
             
         # GET :: /panic
         @self.app.route("/panic", methods=["GET"])
@@ -360,7 +366,7 @@ class MIDICastServer:
             except Exception as e:
 
                 print(e)
-                return str(e), 500
+                return jsonify({"error":str(e)}), 500
             
     def stopVizor(self, signum=None, frame=None):
         """Handles shutting down vizor using signal since Flask is already handling shutdown"""

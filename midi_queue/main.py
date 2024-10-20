@@ -102,7 +102,8 @@ class MIDIQueue:
         # Send note_off messages for all active notes:
         self.stop()
         # Reset queue:
-        self.queue = asyncio.Queue()
+        # TODO: We can't just re-iniitalize the async quee to remove exisitng messages WITHOUT re-adding it to the event loop:
+        # self.queue = asyncio.Queue()
         # Re-enable queue:
         self.active = True 
 
