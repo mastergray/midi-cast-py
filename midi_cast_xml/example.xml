@@ -1,0 +1,12 @@
+<midicast>
+    <note channel="1" tone="C4"  gate=".5" />
+    <note channel="1" tone="C#4" gate=".5" />
+    <note channel="1" tone="D#4" gate=".5" />
+    <note channel="1" tone="D4"  gate=".5" />
+    <chord channel="1" tonic="C4" tones="1" gate="1" />
+    <chord channel="1" tonic="C4" tones="1-3-5" gate="1" transpose="4" />
+    <chord channel="1" tonic="C4" tones="1-3b-5" gate=".5" transpose="3" />
+    <chord channel="1" tonic="C4" tones="1-3-5" />
+    <rest channel="1" gate="1" />
+    <chord channel="1" tonic="C4" tones="1-3b-5-7-8#-10b" gate=".05" />
+</midicast>

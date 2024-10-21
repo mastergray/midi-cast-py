@@ -10,7 +10,7 @@ modules_dir_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 sys.path.append(modules_dir_path)
 
 # Dependencies
-from flask import Flask, request, jsonify                               # HTTP Server Framework
+from flask import Flask, request, jsonify, Response                     # HTTP Server Framework
 from midi_queue_vizor.main import MIDIQueueVizor                        # How we are sending messages to a MIDI device
 import mido                                                             # MIDI I/O Framework
 import threading                                                        # For managing the event loop of those queues
@@ -20,6 +20,7 @@ from midi_queue_message.MIDINoteMessageOff import MIDINoteMessageOff    # For se
 from midi_queue_message.MIDIMessageChord import MIDIMessageChord        # For sending the MIDI Messages of a chord
 from midi_queue_message.MIDIMessageStop import MIDIMessageStop          # For stopping all the active notes of a specific channel
 from midi_queue_message.MIDIMessageControl import MIDIMessageControl    # For sending CONTROL_CHANGE MIDI messages
+from midi_cast_xml.main import MIDICastXML                              # For processing MIDI messages using XML
 from flask_cors import CORS                                             # For setting CORS
 
 class MIDICastServer:
@@ -362,6 +363,27 @@ class MIDICastServer:
 
                 # Send sucess response:
                 return ("True", 200)
+
+            except Exception as e:
+
+                print(e)
+                return jsonify({"error":str(e)}), 500
+            
+        # POST :: /xml
+        @self.app.route("/xml", methods=["POST"])
+        def play_xml():   
+            "Plays the given XML"
+            try:
+
+                # Ensure that the request's content type is XML
+                if request.content_type != 'application/xml':
+                    return Response("Invalid content type", status=400)
+
+                # Read the raw XML data from the request body, transform XML into message, and then send to viozr:
+                MIDICastXML.init(request.data, self.vizor)
+
+                # Send sucess response:
+                return jsonify({"success":True}), 200
 
             except Exception as e:
 

@@ -165,7 +165,7 @@ class MIDINoteMessage(MIDIQueueMessage):
             self._gate = value 
         else:
             print(value)
-            raise TypeError("Can Only Set Message Gate Value Using Either NONE or an INTEGER")
+            raise TypeError("Can Only Set Message Gate Value Using NONE, FLOAT or an INTEGER")
         
     @property
     def velocity(self) -> int:
