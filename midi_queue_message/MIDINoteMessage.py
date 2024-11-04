@@ -127,9 +127,12 @@ class MIDINoteMessage(MIDIQueueMessage):
     
     @noteValue.setter
     def noteValue(self, value: Union[str, int]) -> None:  
-        """GETTER for MIDI "note" value to for this message"""
+        """SETTER for MIDI "note" value to for this message"""
         if isinstance(value, str):
-            self._noteValue = MIDINoteMessage.lookup(value)
+            if value.isdigit():
+                self.noteValue = int(value)
+            else:
+                self._noteValue = MIDINoteMessage.lookup(value)
         elif isinstance(value, int):
             if value >= 21 and value <= 108:
                 self._noteValue = value 

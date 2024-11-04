@@ -10,9 +10,10 @@ modules_dir_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 sys.path.append(modules_dir_path)
 
 # Dependencies
-import asyncio                                      # For managing queues with
-import mido                                         # MIDI I/O Framework
-from midi_queue_message.main import MIDIQueueMessage     # For annotating methods that accept a MIDIQueueMessage
+from midi_queue.PrioQueue import PrioQueue             # For managing queues with
+import mido                                            # MIDI I/O Framework
+import asyncio                                         # Async operations
+from midi_queue_message.main import MIDIQueueMessage   # For annotating methods that accept a MIDIQueueMessage
 
 class MIDIQueue:
 
@@ -25,7 +26,7 @@ class MIDIQueue:
     def __init__(self, channel, vizor : MIDIQueueVizor):
         self.channel = channel          # MIDI channel for sending messages to
         self.vizor = vizor              # Vizor which manages this queue
-        self.queue = asyncio.Queue()    # Stores messages intended for that channel
+        self.queue = PrioQueue()        # Stores messages intended for that channel
         self.activeNotes = {}           # Stores notes which are currently "on"
         self.active = True              # Determines if queue is "active" or not - that is if messages can be recieved or processed
 
@@ -47,13 +48,14 @@ class MIDIQueue:
     # Instance Methods #
     ####################
 
-    def add(self, msg : MIDIQueueMessage):
+    def add(self, msg : MIDIQueueMessage, hasPrio : bool = False):
         """Add message to queue for processing"""
         # Check to ensure we are trying to send a message using a MIDIQueueMessage object:
         if not isinstance(msg, MIDIQueueMessage):
             raise ValueError(f"Could not add message to channel `${self.channel}` queue: {type(message).__name__}. Expected MIDIQueueMessage")
         if self.active is True:
-            return asyncio.run_coroutine_threadsafe(self.queue.put(msg), self.vizor.eventLoop)
+            coroutine = self.queue.put_front(msg) if hasPrio is True else self.queue.put(msg)
+            return asyncio.run_coroutine_threadsafe(coroutine, self.vizor.eventLoop)
         else:
             print(f"Message for channel queue '{self.channel}' not added since queue is not active")
     
@@ -91,8 +93,7 @@ class MIDIQueue:
         # Send note_off messages for all active notes:
         for noteValue, note in self.activeNotes.items():
             message = mido.Message("note_off", channel=self.channel, note=noteValue, velocity=0)
-            self.vizor.outport.send(message)
-        # Reset active notes:
+            self.vizor.outport.send(message)       # Reset active notes:
         self.activeNotes = {}
 
     def clear(self):
@@ -102,8 +103,7 @@ class MIDIQueue:
         # Send note_off messages for all active notes:
         self.stop()
         # Reset queue:
-        # TODO: We can't just re-iniitalize the async quee to remove exisitng messages WITHOUT re-adding it to the event loop:
-        # self.queue = asyncio.Queue()
+        self.queue.clear()
         # Re-enable queue:
         self.active = True 
 

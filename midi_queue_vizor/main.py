@@ -48,7 +48,7 @@ class MIDIQueueVizor:
         except IndexError:
             raise IndexError(f"No Queue Found For Channel {channel}")
 
-    def relay(self, message : MIDIQueueMessage):
+    def relay(self, message : MIDIQueueMessage, hasPrio : bool = False):
         """Sends message to queue using channel of message"""
         # Check to ensure we are trying to send a message using a MIDIQueueMessage object:
         if not isinstance(message, MIDIQueueMessage):
@@ -56,7 +56,7 @@ class MIDIQueueVizor:
         # Get queue by channel and send message:
         if self.active is True:
             queue = self.queue(message.channel)
-            queue.add(message)
+            queue.add(message, hasPrio)
         else:
             print(f"Message to Channel '{message.channel}' not sent since vizor is not currently active")
 
@@ -118,9 +118,7 @@ class MIDIQueueVizor:
             self.outport.panic()
         # Manually clear every queues messages and active notes:
         for queue in self.queues:
-            # TODO: We can't just re-iniitalize the async quee to remove exisitng messages WITHOUT re-adding it to the event loop:
-            #queue.queue = asyncio.Queue()    # Initialize new queue to remove existing messages
-            queue.activeNotes = {}           # Initialize new active notes cache to remove all existing notes
+            queue.clear() # Resets Queue
         # Re-active vizor and queues:
         self.active = True
         # Status message update:

@@ -9,6 +9,8 @@ import xml.etree.ElementTree as ET  # For parsing XML
 from midi_cast_xml.MIDICastXMLNote import MIDICastXMLNote
 from midi_cast_xml.MIDICastXMLChord import MIDICastXMLChord
 from midi_cast_xml.MIDICastXMLRest import MIDICastXMLRest
+from midi_cast_xml.MIDICastXMLControl import MIDIMessageControl
+from midi_cast_xml.MIDICastXMLNotes import MIDICastXMLNotes
 
 class MIDICastXML:
 
@@ -56,7 +58,11 @@ class MIDICastXML:
                 if elem.tag == "chord":
                     MIDICastXMLChord.init(elem, result)
                 if elem.tag == "rest":
-                     MIDICastXMLRest.init(elem, result)
+                    MIDICastXMLRest.init(elem, result)
+                if elem.tag == "control":
+                    MIDIMessageControl.init(elem, result)
+                if elem.tag == "notes":
+                    MIDICastXMLNotes.init(elem, result)
         return result
     
     def send(self, vizor):

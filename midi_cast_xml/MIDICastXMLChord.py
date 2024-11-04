@@ -86,7 +86,7 @@ class MIDICastXMLChord:
     
     @degrees.setter
     def degrees(self, value) -> None:
-        self._degrees = value.split("-") 
+        self._degrees = value.split(",") 
 
     #-------#
     # tonic #
