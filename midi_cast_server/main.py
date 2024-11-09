@@ -20,6 +20,7 @@ from midi_queue_message.MIDINoteMessageOff import MIDINoteMessageOff    # For se
 from midi_queue_message.MIDIMessageChord import MIDIMessageChord        # For sending the MIDI Messages of a chord
 from midi_queue_message.MIDIMessageStop import MIDIMessageStop          # For stopping all the active notes of a specific channel
 from midi_queue_message.MIDIMessageControl import MIDIMessageControl    # For sending CONTROL_CHANGE MIDI messages
+from midi_queue_message.MIDIMessageNotes import MIDIMessageNotes        # For sending multiple MIDI NOTE ON messages
 from midi_cast_xml.main import MIDICastXML                              # For processing MIDI messages using XML
 from flask_cors import CORS                                             # For setting CORS
 
@@ -106,6 +107,36 @@ class MIDICastServer:
                 # Send relayed message as response to request:
                 return str(msg), 200
         
+            except Exception as e:
+                
+                print(e)
+                return jsonify({"error":str(e)}), 500
+
+        # POST :: /notes/:channel
+        @self.app.route("/notes/<channel>", methods=["POST"])
+        def send_notes(channel):
+            """Send multiple notes for the given channel"""
+            try:
+            
+                # Get channel from dynamic URL segment
+                channel = MIDICastServer.setChannel(channel)
+
+                # Get the JSON data from the request body
+                body = request.get_json()
+
+                notes = body.get("notes")
+                gate = MIDICastServer.setGate(body)
+                velocity = MIDICastServer.setVelocity(body)
+
+                # Send to the channel of a device:
+                msg = MIDIMessageNotes(channel=channel, notes=notes, gate=gate, velocity=velocity)
+
+                # Relay message to intended channel:
+                self.vizor.relay(msg)
+
+                # Send relayed message as response to request:
+                return str(msg), 200
+
             except Exception as e:
                 
                 print(e)
@@ -247,7 +278,7 @@ class MIDICastServer:
                 y2 = int(y2)
                 start = body.get("start")
                 stop = body.get("stop")
-                steps =  body.get("stop")
+                steps =  body.get("steps")
                 gate = MIDICastServer.setGate(body)
         
                 # Create CHANGE_CONTROL messages to send to the channel of a device:
