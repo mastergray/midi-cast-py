@@ -445,13 +445,15 @@ class MIDICastServer:
     @staticmethod
     def setGate(body : typing.Dict) -> int:
         """Ensure "gate" value from request is valid"""
-        try:
-            gate = body.get("gate")
-            return None if gate == "None" or gate == "null" or gate is None else int(gate) 
-        except Exception as e:
-            # Try to convert to float if int conversion fails
-            return float(gate)
-            
+        gate = body.get("gate")
+        if gate == "None" or gate == "null" or gate is None:
+            return gate 
+        else:
+            num = float(gate)
+            # Check if it's an integer in float form
+            if num.is_integer():
+                return int(num)
+            return num 
 
     @staticmethod
     def setVelocity(body : typing.Dict) -> int:
