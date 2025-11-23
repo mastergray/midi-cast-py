@@ -38,9 +38,10 @@ class MIDIMessageChord (MIDIQueueMessage):
     # CONSTRUCTOR #
     ###############
 
-    def __init__(self, channel : int , tonic : Union[int,str], degrees : List[str], scale : Union[List[int], None] = None, transpose : str = None, gate : Union[int, float, None] = None, velocity: Union[int, None] = None):
+    def __init__(self, channel : int , tonic : Union[int,str], degrees : List[str], scale : Union[List[int], None] = None, transpose : str = None, gate : Union[int, float, None] = None, velocity: Union[int, None] = None, mode:Union[int, str, None] = None):
         super().__init__(channel=channel)
         self.tonic = tonic          # "Tonic" of scale chord is built from
+        self.mode = mode            # Determines "mode" to apply to scale
         self.scale = scale          # Defines distance of notes from tonic to build chord from 
         self.root = transpose       # Determins root of chord (we use the "tonic" as the root if there is nothing to transpose)
         self.tones = degrees        # Defines notes of chord using scale steps and the root
@@ -78,7 +79,9 @@ class MIDIMessageChord (MIDIQueueMessage):
     @scale.setter
     def scale(self, value : Union[List[int], None]) -> None:
         """GETTER for scale used to build chord from"""
+        mode = 0 if self.mode is None else self.mode
         scale = MIDIMessageChord.SCALES.get("Major") if value is None else value
+        scale = MIDIMessageChord.applyMode(scale, mode)
         step = 0
         self._scale = [step]
         for distance in scale:
@@ -203,6 +206,37 @@ class MIDIMessageChord (MIDIQueueMessage):
             scaleDistanceIndex = abs(int(degree)) - 1
             distance = scale[scaleDistanceIndex] 
         return tonic - distance if isNegative else distance + tonic 
+    
+    @staticmethod
+    def applyMode(scale: List[int], mode: Union[int, str, None]):
+        """
+        Rotate an interval list `scale` by `mode` steps.
+        Accepts:
+        - int
+        - string representing an int (e.g. "1", "-2")
+        - None (treated as 0)
+        """
+        L = len(scale)
+        if L == 0:
+            return scale[:]   # safe empty-copy
+
+        # Normalize mode
+        if mode is None:
+            m = 0
+        else:
+            # Allow int or string-int, reject anything else
+            try:
+                m = int(mode)
+            except (TypeError, ValueError):
+                raise ValueError(f"Mode must be an int or string-int, got: {mode!r}")
+
+        # Collapse into range [0, L)
+        m = m % L
+
+        return scale[m:] + scale[:m]
+
+
+
 
 # Example usage
 if __name__ == "__main__":
@@ -230,9 +264,23 @@ if __name__ == "__main__":
     '''
 
     # A simple I - VI - V chord progression in C:
+    '''
     print(MIDIMessageChord(0, "C4", ["1", "3", "5"], transpose="1"))
     print(MIDIMessageChord(0, "C4", ["1", "3b", "5"], transpose="6"))
     print(MIDIMessageChord(0, "C4", ["1", "3", "5#"], transpose="7b"))
+ 
+
+    print(MIDIMessageChord(0, "C4", ["1", "3b", "5"], transpose="1", mode="2"))
+    print(MIDIMessageChord(0, "E4", ["1", "3", "5#"], transpose="2", mode="3"))
+    print(MIDIMessageChord(0, "A3", ["1", "3", "5", "9"], transpose="3", mode="4"))
+    print(MIDIMessageChord(0, "F4", ["1", "3", "4"], transpose="4", mode="5"))
+    print(MIDIMessageChord(0, "G#5", ["1", "3#", "5"], transpose="5", mode="6"))
+    '''
+
+
+    print(MIDIMessageChord(0, "A5", ["1", "3b", "5"], transpose="2", mode="2", scale=[1,2,3,4]))
+
+
 
 
 
