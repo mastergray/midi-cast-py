@@ -38,12 +38,13 @@ class MIDIMessageChord (MIDIQueueMessage):
     # CONSTRUCTOR #
     ###############
 
-    def __init__(self, channel : int , tonic : Union[int,str], degrees : List[str], scale : Union[List[int], None] = None, transpose : str = None, gate : Union[int, float, None] = None, velocity: Union[int, None] = None, mode:Union[int, str, None] = None):
+    def __init__(self, channel : int , tonic : Union[int,str], degrees : List[str], scale : Union[List[int], None] = None, transpose : str = None, gate : Union[int, float, None] = None, velocity: Union[int, None] = None, mode:Union[int, str, None] = None, displace:Union[int, str, None] = None):
         super().__init__(channel=channel)
         self.tonic = tonic          # "Tonic" of scale chord is built from
         self.mode = mode            # Determines "mode" to apply to scale
         self.scale = scale          # Defines distance of notes from tonic to build chord from 
         self.root = transpose       # Determins root of chord (we use the "tonic" as the root if there is nothing to transpose)
+        self.displace = displace    # Determine semitone offset for the tones set by the chord AFTER transpose and mode have already been applied
         self.tones = degrees        # Defines notes of chord using scale steps and the root
         self.gate = gate            # Determines long to play chord (in seconds)
         self.velocity = velocity    # Determines how loud to play chord 
@@ -96,7 +97,31 @@ class MIDIMessageChord (MIDIQueueMessage):
     @tones.setter
     def tones(self, value : List[str]) -> None:
         """SETTER for notes of chord"""
-        self._tones = [MIDIMessageChord.degree(degree, self.scale, self.root) for degree in value]
+        
+        # base harmonic tones from scale/root/degrees
+        base_tones = [
+            MIDIMessageChord.degree(degree, self.scale, self.root)
+            for degree in value
+        ]
+
+        # Normalize displace → int
+        d = self.displace
+        if isinstance(d, str):
+            try:
+                d = int(d)
+            except ValueError:
+                raise ValueError(f"displace must be an integer or integer-string, got: {self.displace!r}")
+
+        if d is None:
+            d = 0
+        elif not isinstance(d, int):
+            raise TypeError(f"displace must be int or str(int), got: {type(d)}")
+
+        # Apply geometric displacement in semitones:
+        if d !=0:
+            base_tones = [t + d for t in base_tones]
+
+        self._tones = [max(0, min(127, t)) for t in base_tones]
 
     @property
     def root(self) -> List[int]:
@@ -277,8 +302,9 @@ if __name__ == "__main__":
     print(MIDIMessageChord(0, "G#5", ["1", "3#", "5"], transpose="5", mode="6"))
     '''
 
-
-    print(MIDIMessageChord(0, "A5", ["1", "3b", "5"], transpose="2", mode="2", scale=[1,2,3,4]))
+    print(MIDIMessageChord(0, "A5", ["1", "3", "5"],  transpose="5"))
+    print(MIDIMessageChord(0, "A5", ["1", "3", "5"],  displace="7"))
+    #print(MIDIMessageChord(0, "A5", ["1", "3", "5"], mode=1, displace=7))
 
 
 

@@ -160,9 +160,10 @@ class MIDICastServer:
                 gate = MIDICastServer.setGate(body)
                 velocity = MIDICastServer.setVelocity(body)
                 mode = body.get("mode")
+                displace = body.get("displace")
 
                 # Create messages to send to the channel of a device:
-                msg = MIDIMessageChord(channel, tonic, degrees, scale, transpose, gate, velocity, mode)
+                msg = MIDIMessageChord(channel, tonic, degrees, scale, transpose, gate, velocity, mode, displace)
 
                 # Relay message to intended channel:
                 self.vizor.relay(msg)
